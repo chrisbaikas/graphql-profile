@@ -30,6 +30,34 @@ function showLogin() {
 function showDashboard() {
   loginView.style.display = "none";
   dashboardView.style.display = "block";
+  loadProfile();
+}
+
+/* ---------------- PROFILE ---------------- */
+
+// Loads every dashboard section. Each section loader handles its own errors so
+// one failing query doesn't blank the whole profile.
+function loadProfile() {
+  loadUserSection();
+}
+
+// Ticket 5 — Section 1: basic user identification.
+async function loadUserSection() {
+  const loginEl = document.getElementById("user-login");
+  const idEl = document.getElementById("user-id");
+
+  try {
+    const data = await graphqlRequest(`{ user { id login } }`);
+    const user = data.user && data.user[0];
+    if (!user) throw new Error("No user data returned.");
+
+    if (loginEl) loginEl.textContent = user.login;
+    if (idEl) idEl.textContent = user.id;
+  } catch (err) {
+    if (loginEl) loginEl.textContent = "—";
+    if (idEl) idEl.textContent = "—";
+    showError(`Could not load user info: ${err.message}`);
+  }
 }
 
 /* ---------------- LOGIN ---------------- */

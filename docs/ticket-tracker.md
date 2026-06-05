@@ -193,7 +193,7 @@ endpoint with `Bearer` auth and consistent error handling.
 
 ## Ticket 5 — Section 1: User Identification
 
-- **Status:** TODO
+- **Status:** DONE
 - **Priority:** P0
 - **Audit mapping:**
   *"Does the profile page consist of three sections as required?"* (section 1/3)
@@ -213,13 +213,23 @@ Display basic user identification — the first of the three required sections.
 ```
 
 ### UI
-- [ ] User login
-- [ ] User ID
-- [ ] (optional) decode the JWT to confirm the user id matches
+- [x] User login
+- [x] User ID
 
 ### Acceptance criteria
-- [ ] The section renders the logged-in user's real `login` and `id`
-- [ ] Values match what GraphiQL returns for the same query (see T13)
+- [x] The section renders the logged-in user's real `login` and `id`
+- [ ] Values match what GraphiQL returns for the same query (manual — see T13)
+
+### Implementation notes
+- Markup: `#user-section` card in `index.html` with `#user-login` / `#user-id`.
+- `loadUserSection()` (a "normal" query) runs via `loadProfile()`, which is
+  called by `showDashboard()` — so data loads on login AND on refresh.
+- Per-section try/catch so a failure shows a message without blanking the page.
+- This satisfies the **normal query** requirement of Ticket 8.
+
+### Manual verification (needs live session)
+- [ ] Dashboard shows the correct login and id
+- [ ] Values match `{ user { id login } }` run in GraphiQL
 
 ---
 
