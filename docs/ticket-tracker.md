@@ -158,7 +158,7 @@ Persist the session across reloads and provide a working logout.
 
 ## Ticket 4 — GraphQL Service Layer
 
-- **Status:** TODO
+- **Status:** DONE
 - **Priority:** P0
 - **Audit mapping:** Foundation for T5–T11 and T13 (data accuracy)
 
@@ -167,15 +167,27 @@ A single reusable function that runs any GraphQL query/variables against the
 endpoint with `Bearer` auth and consistent error handling.
 
 ### Tasks
-- [ ] `graphqlRequest(query, variables)` helper
-- [ ] Send header `Authorization: Bearer <jwt>`
-- [ ] `POST` JSON `{ query, variables }` to the GraphQL endpoint
-- [ ] Surface GraphQL errors (response `errors[]`) and network errors
-- [ ] On auth failure, trigger the logout flow from T3
+- [x] `graphqlRequest(query, variables)` helper
+- [x] Send header `Authorization: Bearer <jwt>`
+- [x] `POST` JSON `{ query, variables }` to the GraphQL endpoint
+- [x] Surface GraphQL errors (response `errors[]`) and network errors
+- [x] On auth failure, trigger the logout flow from T3
 
 ### Acceptance criteria
-- [ ] Every data query in the app goes through this one function
-- [ ] A failed/expired token produces a graceful error, not an uncaught throw
+- [x] Every data query in the app goes through this one function
+- [x] A failed/expired token produces a graceful error, not an uncaught throw
+
+### Implementation notes
+- `graphqlRequest(query, variables = {})` returns `result.data`.
+- Pre-flight: missing/expired token → `logout()` + throw before any network call.
+- Error layers handled distinctly: network failure, non-JSON response,
+  HTTP 401/403 (→ logout), and GraphQL `errors[]`. JWT-related GraphQL errors
+  (Hasura) also trigger `logout()`.
+- Callers (Tickets 5–11) `await graphqlRequest(...)` and catch to show messages.
+
+### Manual verification (needs live session)
+- [ ] A simple `{ user { id login } }` call returns data while logged in
+- [ ] Tampering the stored token then querying → graceful logout, no crash
 
 ---
 
