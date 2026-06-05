@@ -137,3 +137,58 @@ function isTokenExpired(jwt) {
   if (!payload || typeof payload.exp !== "number") return true;
   return payload.exp * 1000 <= Date.now();
 }
+
+/* ---------------- GRAPHQL SERVICE ---------------- */
+
+// The single entry point for every GraphQL call in the app. Sends the query
+// (and optional variables) to the endpoint with Bearer auth and returns the
+// `data` object. On any auth failure it logs the user out; on any other failure
+// it throws an Error with a readable message (callers handle the rejection).
+async function graphqlRequest(query, variables = {}) {
+  const jwt = localStorage.getItem("token");
+
+  // No usable token — end the session before we even hit the network.
+  if (!jwt || isTokenExpired(jwt)) {
+    logout();
+    throw new Error("Your session has expired. Please log in again.");
+  }
+
+  let response;
+  try {
+    response = await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify({ query, variables })
+    });
+  } catch {
+    throw new Error("Network error — could not reach the GraphQL server.");
+  }
+
+  // The server rejected the token (expired/revoked) — force a logout.
+  if (response.status === 401 || response.status === 403) {
+    logout();
+    throw new Error("Your session is no longer valid. Please log in again.");
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Received an invalid response from the GraphQL server.");
+  }
+
+  // GraphQL reports query/auth errors in a top-level `errors` array (HTTP 200).
+  if (result.errors && result.errors.length) {
+    const message = result.errors.map((e) => e.message).join("; ");
+    // Hasura signals a bad/expired JWT inside the errors array too.
+    if (/jwt|unauthor|token/i.test(message)) {
+      logout();
+    }
+    throw new Error(message || "GraphQL query failed.");
+  }
+
+  return result.data;
+}
