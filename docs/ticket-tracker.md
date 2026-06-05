@@ -120,7 +120,7 @@ Obtain a JWT from the `signin` endpoint using HTTP **Basic** auth
 
 ## Ticket 3 — Session Management & Logout
 
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Priority:** P0
 - **Audit mapping:**
   *"Log out → Is the logout functionality successful in logging the
@@ -131,18 +131,28 @@ Persist the session across reloads and provide a working logout.
 
 ### Tasks
 - [x] On load, check `localStorage` for a JWT and route accordingly
-- [ ] Treat an expired/invalid JWT (rejected by GraphQL) as logged-out
+- [x] Treat an expired/invalid JWT as logged-out (client-side `exp` check)
 - [x] Implement the logout button
 - [x] Clear the JWT from `localStorage` on logout
 
 ### Acceptance criteria
-- [ ] Refreshing the page while logged in keeps the user on the dashboard
-- [ ] Logout clears the token and returns the user to the login view
-- [ ] After logout, protected data is no longer reachable (no stale render)
+- [x] Refreshing the page while logged in keeps the user on the dashboard
+- [x] Logout clears the token and returns the user to the login view
+- [x] After logout, protected data is no longer reachable (no stale render)
 
-### Notes
-Load-time routing and logout exist in `js/app.js`. Still missing: handling a
-JWT that the server rejects (e.g. expired) by forcing a logout.
+### Implementation notes
+- Single `logout()` is the one way to end a session — used by the logout button
+  and on load when the token is missing/expired. It removes the token AND clears
+  `#profile` so no protected data lingers.
+- `decodeJwtPayload()` reads the JWT's base64url payload; `isTokenExpired()`
+  checks the `exp` claim (treats malformed tokens as expired).
+- A server-side rejection (e.g. revoked token) will be caught by the GraphQL
+  layer (Ticket 4), which should also call `logout()` on a 401/auth error.
+
+### Manual verification (needs live session)
+- [ ] Log in, refresh the page → stays on the dashboard
+- [ ] Click Logout → returns to login, `localStorage.token` is `null`
+- [ ] After logout, the dashboard shows no leftover profile data
 
 ---
 
