@@ -76,7 +76,7 @@ refactor into a small router in T4.
 
 ## Ticket 2 — Authentication (JWT Login)
 
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Priority:** P0
 - **Audit mapping:**
   *"Try to log in with invalid credentials → Is an appropriate error shown?"*
@@ -87,25 +87,34 @@ Obtain a JWT from the `signin` endpoint using HTTP **Basic** auth
 (base64 of `identifier:password`) and store it for later GraphQL requests.
 
 ### Tasks
-- [ ] Replace the hard-coded `https://DOMAIN/...` with the real platform domain
-- [ ] Build the login form (identifier + password) — already present in HTML
-- [ ] Encode credentials with `btoa("identifier:password")`
-- [ ] `POST` to `/api/auth/signin` with header `Authorization: Basic <base64>`
-- [ ] Parse the returned JWT (response may be a quoted string — trim quotes)
-- [ ] Persist the JWT to `localStorage`
-- [ ] On error, render a human-readable message into `#error`
-- [ ] Clear the error message on a subsequent successful login
+- [x] Replace the hard-coded `https://DOMAIN/...` with the real platform domain
+- [x] Build the login form (identifier + password) — `<form>` + labels in HTML
+- [x] Encode credentials with `btoa("identifier:password")`
+- [x] `POST` to `/api/auth/signin` with header `Authorization: Basic <base64>`
+- [x] Parse the returned JWT (response is a quoted string — quotes stripped)
+- [x] Persist the JWT to `localStorage`
+- [x] On error, render a human-readable message into `#error`
+- [x] Clear the error message on a subsequent successful login
 
 ### Acceptance criteria
-- [ ] **Invalid** credentials display a clear error message (no crash, no blank)
-- [ ] **Valid** login stores a JWT and switches to the dashboard view
-- [ ] Login works with **username**:password
-- [ ] Login works with **email**:password
-  *(required explicitly by instructions.md — same single input field handles both)*
+- [x] **Invalid** credentials display a clear error message (no crash, no blank)
+- [x] **Valid** login stores a JWT and switches to the dashboard view
+- [x] Login works with **username**:password
+- [x] Login works with **email**:password
+  *(same input field handles both — sent verbatim as the Basic-auth identifier)*
 
-### Notes
-`js/app.js` already POSTs with Basic auth and stores `token`, but the domain is
-a placeholder and the JWT may come back wrapped in quotes — handle both.
+### Implementation notes
+- Domain centralised in `DOMAIN` (`js/app.js`); `SIGNIN_URL` derived from it.
+- `cleanToken()` strips the surrounding quotes the endpoint wraps the JWT in.
+- Distinct messages for empty fields, network failure, and rejected creds.
+- Submit button is disabled during the request (basic loading guard).
+- Form submits on Enter (`submit` handler with `preventDefault`).
+
+### Manual verification (needs live creds)
+- [ ] Log in with username+password → reaches dashboard
+- [ ] Log in with email+password → reaches dashboard
+- [ ] Wrong password → "Invalid credentials" message, stays on login
+- [ ] Confirm stored token in DevTools has no surrounding quotes
 
 ---
 

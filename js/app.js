@@ -40,36 +40,63 @@ if (loginForm) {
 async function login(event) {
   if (event) event.preventDefault();
 
-  const username = document.getElementById("username").value;
+  // Works for both "username:password" and "email:password" — the platform
+  // accepts either identifier in the Basic auth header.
+  const identifier = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
 
-  const credentials = btoa(`${username}:${password}`);
+  if (errorText) errorText.textContent = "";
+
+  if (!identifier || !password) {
+    showError("Please enter your username/email and password.");
+    return;
+  }
+
+  const credentials = btoa(`${identifier}:${password}`);
+  const submitBtn = document.getElementById("login-btn");
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
-    const response = await fetch(SIGNIN_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Basic ${credentials}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error("Invalid credentials");
+    let response;
+    try {
+      response = await fetch(SIGNIN_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Basic ${credentials}`
+        }
+      });
+    } catch (networkErr) {
+      throw new Error("Network error — could not reach the server.");
     }
 
-    const token = await response.text();
+    if (!response.ok) {
+      // 401/403 from signin means the credentials were rejected.
+      throw new Error("Invalid credentials. Please try again.");
+    }
 
-    localStorage.setItem("token", token);
+    const jwt = cleanToken(await response.text());
+    if (!jwt) {
+      throw new Error("Login failed: no token returned by the server.");
+    }
 
-    if (errorText) errorText.textContent = "";
-
+    localStorage.setItem("token", jwt);
     showDashboard();
 
   } catch (err) {
-    if (errorText) {
-      errorText.textContent = err.message;
-    }
+    showError(err.message);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
+}
+
+// The signin endpoint returns the JWT as a quoted string (e.g. "eyJ...").
+// Strip surrounding quotes/whitespace so the Bearer header is valid later.
+function cleanToken(raw) {
+  return raw.trim().replace(/^"+|"+$/g, "").trim();
+}
+
+function showError(message) {
+  if (errorText) errorText.textContent = message;
 }
 
 /* ---------------- LOGOUT ---------------- */
