@@ -12,12 +12,19 @@
   <section id="login-view">
     <h1>Login</h1>
 
-    <input type="text" id="username" placeholder="username or email">
-    <input type="password" id="password" placeholder="password">
+    <form id="login-form">
+      <label for="username">Username or email</label>
+      <input type="text" id="username" name="username"
+             placeholder="username or email" autocomplete="username" required>
 
-    <button id="login-btn">Login</button>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="password" autocomplete="current-password" required>
 
-    <p id="error"></p>
+      <button type="submit" id="login-btn">Login</button>
+    </form>
+
+    <p id="error" role="alert"></p>
   </section>
 
   <!-- DASHBOARD VIEW -->
