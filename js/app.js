@@ -1,7 +1,13 @@
+/* ---------------- CONFIG ---------------- */
+// Zone01 platform domain. Used for both auth (signin) and GraphQL.
+const DOMAIN = "platform.zone01.gr";
+const SIGNIN_URL = `https://${DOMAIN}/api/auth/signin`;
+const GRAPHQL_URL = `https://${DOMAIN}/api/graphql-engine/v1/graphql`;
+
 const loginView = document.getElementById("login-view");
 const dashboardView = document.getElementById("dashboard-view");
 
-const loginBtn = document.getElementById("login-btn");
+const loginForm = document.getElementById("login-form");
 const logoutBtn = document.getElementById("logout-btn");
 
 const errorText = document.getElementById("error");
@@ -27,18 +33,20 @@ function showDashboard() {
 
 /* ---------------- LOGIN ---------------- */
 
-if (loginBtn) {
-  loginBtn.addEventListener("click", login);
+if (loginForm) {
+  loginForm.addEventListener("submit", login);
 }
 
-async function login() {
+async function login(event) {
+  if (event) event.preventDefault();
+
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
   const credentials = btoa(`${username}:${password}`);
 
   try {
-    const response = await fetch("https://DOMAIN/api/auth/signin", {
+    const response = await fetch(SIGNIN_URL, {
       method: "POST",
       headers: {
         "Authorization": `Basic ${credentials}`
